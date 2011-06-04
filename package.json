@@ -1,0 +1,13 @@
+{
+    "name": "rp",
+    "version": "0.1",
+    "description": "A package manager for RingoJS",
+    "keywords": ["ringo", "package", "packages", "manager", "rhino"],
+    "author": {
+        "name": "Robert Gaggl",
+        "email": "robert@nomatic.org",
+        "web": "http://github.com/grob/"
+    },
+    "contributors": [],
+    "main": "rp"
+}
