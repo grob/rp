@@ -37,4 +37,6 @@ if [ -z "$RINGO_HOME" ]; then
     RINGO_HOME="$(find_ringo_home "$0")"
 fi
 
-"$RINGO_HOME/bin/ringo" lib/rp/rp.js $@
+RP_DIR="$(dirname -- "$0")/../"
+
+"$RINGO_HOME/bin/ringo" $RP_DIR/lib/rp/rp.js $@
