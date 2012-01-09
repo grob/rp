@@ -1,0 +1,1 @@
+@ringo "%~dp0\..\lib\rp\rp.js" %*
