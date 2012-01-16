@@ -9,5 +9,8 @@
         "web": "http://github.com/grob/"
     },
     "contributors": [],
+    "dependencies": {
+        "ringo-semver": ">=0.1"
+    },
     "main": "rp"
 }
