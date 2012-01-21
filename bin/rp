@@ -1,42 +1,32 @@
 #!/bin/bash
 # -----------------------------------------------------------------------------
-# Start Script for RingoJS
+# Start Script for rp (RingoJS package management client)
 #
-# Environment Variables
+# Needs either:
+#  * RINGO_HOME environment variable set
+#  * RingoJS' "bin" directory in the PATH environment variable
+#  * this shell script being linked into RingoJS' "bin" directory
 #
-#   RINGO_HOME   (Optional) Ringo installation directory
 # -----------------------------------------------------------------------------
 
-#
-# find_ringo_home - mostly an emulation of GNU's `readlink -f`
-#
-function find_ringo_home() {
-    # save original working directory
-    ORIG_PWD="$(pwd -P)"
-
-    # walk the links! we cd into the dir of the target binary, read the link,
-    # make this link our new target, and start over. we stop as soon as the
-    # target is no link anymore.
-    T="$1"
-    while true; do
-        cd "$(dirname "$T")"
-        T="$(basename "$T")"
-        if [ ! -L "$T" ]; then break; fi
-        T="$(readlink "$T")"
-    done
-
-    # the final target is in bin/, change to parent and echo as home
-    cd ..
-    echo "$(pwd -P)"
-
-    # restore original working directory
-    cd "$ORIG_PWD"
-}
-
-if [ -z "$RINGO_HOME" ]; then
-    RINGO_HOME="$(find_ringo_home "$0")"
+# first, check if ringo is in path
+RINGO=`type -P ringo`
+if [ -z "$RINGO" ]; then
+    # ringo is not in path - check RINGO_HOME env variable
+    if [ -n "$RINGO_HOME" ]; then
+        RINGO="$RINGO_HOME/bin/ringo"
+    else
+        DIR="$(dirname "$0")"
+        if [ -L $0 ] && [ -e "$DIR/ringo" ]; then
+            RINGO="$DIR/ringo"
+        fi
+    fi
 fi
 
-RP_DIR="$(dirname -- "$0")/../"
+if [ -z "$RINGO" ]; then
+    echo "Unable to find RingoJS."
+    echo "Please set the RINGO_HOME environment variable or add RingoJS to the path."
+    exit 1
+fi
 
-"$RINGO_HOME/bin/ringo" $RP_DIR/lib/rp/rp.js $@
+"$RINGO" ./rp/lib/rp/rp.js $@

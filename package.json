@@ -12,5 +12,5 @@
     "dependencies": {
         "ringo-semver": ">=0.1"
     },
-    "main": "rp"
+    "main": "./lib/rp/rp"
 }

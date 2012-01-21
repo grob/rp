@@ -1,1 +1,1 @@
-@ringo "%~dp0\..\lib\rp\rp.js" %*
+@ringo "./rp/lib/rp/rp.js" %*
