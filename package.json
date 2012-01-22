@@ -1,16 +1,19 @@
 {
     "name": "rp",
-    "version": "0.1",
+    "version": "0.1.0",
     "description": "A package manager for RingoJS",
-    "keywords": ["ringo", "package", "packages", "manager", "rhino"],
+    "keywords": ["package manager", "ringojs", "modules"],
+    "homepage": "https://github.com/grob/rp/",
     "author": {
         "name": "Robert Gaggl",
         "email": "robert@nomatic.org",
         "web": "http://github.com/grob/"
     },
     "contributors": [],
-    "dependencies": {
-        "ringo-semver": ">=0.1"
-    },
+    "bugs": "http://github.com/grob/rp/issues",
+    "licences": [{
+        "type": "Apache License Version 2.0",
+        "url": "http://www.apache.org/licenses/"
+    }],
     "main": "./lib/rp/rp"
 }
