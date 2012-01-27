@@ -9,6 +9,8 @@ Status
 
 **rp is experimental beta**, so expect bugs. Because of that and because rp adds and removes files, directories and links on local disks you should not use it on production systems or without an up-to-date backup.
 
+**Important note for Windows users:** As of now, rp is largely untested on Windows (due to the fact that none of my computers run Windows), so your mileage may vary. What currently definitly won't work is package de/activation, because rp uses symbolic links for that (i know that Windows 7 supports symbolic links, but the POSIX library used by RingoJS doesn't).
+
 
 Installation
 ============
@@ -17,7 +19,7 @@ rp should be installed using the following command line:
 
     echo `curl -s http://rpr.nomatic.org/install.js` | path/to/bin/ringo
 
-Change `path/to/bin/ringo` to the path of the ringo start script. **Note** that rp will be installed within the RingoJS installation containing the start script.
+Change `path/to/bin/ringo` to the path of the ringo start script. **Note** that rp will be installed within the RingoJS installation containing the start script. If you have the environment variable `RINGO_HOME` set, rp will be installed where it points to (so if want to try out rp in a pristine RingoJS installation, make sure to unset `RINGO_HOME` before).
 
 
 Usage
