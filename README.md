@@ -13,9 +13,15 @@ Status
 Installation
 ============
 
-Use `ringo-admin` provided by RingoJS to install rp:
+rp should be installed using the following command line:
 
-    ringo-admin install grob/rp
+    echo `curl -s http://rpr.nomatic.org/install.js` | path/to/bin/ringo
+
+Change `path/to/bin/ringo` to the path of the ringo start script. **Note** that rp will be installed within the RingoJS installation containing the start script.
+
+
+Usage
+=====
 
 If you have RingoJS' `bin` directory in the path (which you should), you can start rp by simply entering
 
