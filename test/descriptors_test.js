@@ -143,6 +143,36 @@ exports.testCheckAuthor = function() {
     }));
 };
 
+exports.testCheckRepositories = function() {
+    assert.throws(function() {
+        descriptors.checkRepositories();
+    });
+    assert.throws(function() {
+        descriptors.checkRepositories(null);
+    });
+    assert.throws(function() {
+        descriptors.checkRepositories([]);
+    });
+    assert.throws(function() {
+        descriptors.checkRepositories([{}]);
+    });
+    assert.throws(function() {
+        descriptors.checkRepositories([{"url": "somewhere"}]);
+    });
+    assert.throws(function() {
+        descriptors.checkRepositories([{"type": "git"}]);
+    });
+    assert.isTrue(descriptors.checkRepositories([{
+            "type": "git",
+            "url": "somewhere"
+        },
+        {
+            "type": "svn",
+            "url": "somewhere"
+        }
+    ]));
+};
+
 //start the test runner if we're called directly from command line
 if (require.main == module.id) {
     system.exit(require('test').run(exports));
