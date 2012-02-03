@@ -143,26 +143,51 @@ exports.testCheckAuthor = function() {
     }));
 };
 
+exports.testCheckHashList = function() {
+    assert.throws(function() {
+        descriptors.checkHashList();
+    });
+    assert.throws(function() {
+        descriptors.checkHashList(null);
+    });
+    assert.throws(function() {
+        descriptors.checkHashList([]);
+    });
+    assert.throws(function() {
+        descriptors.checkHashList([{}]);
+    });
+    assert.throws(function() {
+        descriptors.checkHashList([{"prop": "value"}], "test", ["nonexisting"]);
+    });
+    assert.isTrue(descriptors.checkHashList([{"prop": "value"}], "test", ["prop"]));
+};
+
 exports.testCheckRepositories = function() {
     assert.throws(function() {
-        descriptors.checkRepositories();
-    });
-    assert.throws(function() {
-        descriptors.checkRepositories(null);
-    });
-    assert.throws(function() {
-        descriptors.checkRepositories([]);
-    });
-    assert.throws(function() {
-        descriptors.checkRepositories([{}]);
+        descriptors.checkRepositories([{"type": "git"}]);
     });
     assert.throws(function() {
         descriptors.checkRepositories([{"url": "somewhere"}]);
     });
-    assert.throws(function() {
-        descriptors.checkRepositories([{"type": "git"}]);
-    });
     assert.isTrue(descriptors.checkRepositories([{
+            "type": "git",
+            "url": "somewhere"
+        },
+        {
+            "type": "svn",
+            "url": "somewhere"
+        }
+    ]));
+};
+
+exports.testCheckLicenses = function() {
+    assert.throws(function() {
+        descriptors.checkLicenses([{"type": "git"}]);
+    });
+    assert.throws(function() {
+        descriptors.checkLicenses([{"url": "somewhere"}]);
+    });
+    assert.isTrue(descriptors.checkLicenses([{
             "type": "git",
             "url": "somewhere"
         },
