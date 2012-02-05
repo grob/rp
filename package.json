@@ -1,6 +1,6 @@
 {
     "name": "rp",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "A package manager for RingoJS",
     "keywords": ["package manager", "ringojs", "modules"],
     "homepage": "https://github.com/grob/rp/",
@@ -10,10 +10,14 @@
         "web": "http://github.com/grob/"
     },
     "contributors": [],
+    "repositories": [{
+        "type": "git",
+        "url": "https://github.com/grob/rp.git"
+    }],
     "bugs": "http://github.com/grob/rp/issues",
-    "licences": [{
+    "licenses": [{
         "type": "Apache License Version 2.0",
-        "url": "http://www.apache.org/licenses/"
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
     }],
     "main": "./lib/rp/rp"
 }
