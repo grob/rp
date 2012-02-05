@@ -198,6 +198,16 @@ exports.testCheckLicenses = function() {
     ]));
 };
 
+exports.testSanitizeHashList = function() {
+    var arr = [{"one": " one ", "two": 2, "three": "3"}];
+    descriptors.sanitizeHashList(arr, ["one"]);
+    assert.strictEqual(arr.length, 1);
+    assert.strictEqual(Object.keys(arr[0]).length, 1);
+    assert.strictEqual(Object.keys(arr[0])[0], "one");
+    // string values are trimmed
+    assert.strictEqual(arr[0]["one"], "one");
+};
+
 //start the test runner if we're called directly from command line
 if (require.main == module.id) {
     system.exit(require('test').run(exports));
