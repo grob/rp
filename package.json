@@ -19,5 +19,8 @@
         "type": "Apache License Version 2.0",
         "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
     }],
+    "engines": {
+        "ringojs": ">=0.8"
+    },
     "main": "./lib/rp/rp"
 }
