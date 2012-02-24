@@ -2,7 +2,6 @@ var assert = require("assert");
 var packages = require("../lib/rp/utils/packages");
 var config = require("../lib/rp/utils/config");
 var semver = require("../lib/rp/utils/semver");
-var registry = require("../lib/rp/utils/registry");
 var fs = require("fs");
 
 const testDir = fs.normal(fs.join(java.lang.System.getProperty("java.io.tmpdir"), "rptest"));
@@ -222,6 +221,17 @@ exports.testGetLatestInstalledVersion = function() {
             semver.cleanVersion("0.2"));
 };
 
+exports.testGetLatestInstalledVersions = function() {
+    createTestPackage(installDir, "one", "0.1beta1");
+    createTestPackage(installDir, "one", "0.2");
+    createTestPackage(installDir, "two", "0.2.10");
+    createTestPackage(installDir, "two", "0.3");
+    var versions = packages.getLatestInstalledVersions();
+    assert.strictEqual(Object.keys(versions).length, 2);
+    assert.strictEqual(versions["one"], "0.2.0");
+    assert.strictEqual(versions["two"], "0.3.0");
+};
+
 exports.testGetActivatedVersion = function() {
     var dir = createTestPackage(installDir, pkgName, pkgVersion);
     createLink(dir, pkgName);
@@ -229,25 +239,25 @@ exports.testGetActivatedVersion = function() {
             semver.cleanVersion(pkgVersion));
 };
 
-exports.testResolveDependencies = function() {
-    var descriptor = {
-        "name": pkgName,
-        "version": pkgVersion
-    };
-    var deps = packages.resolveDependencies(descriptor);
-    assert.strictEqual(deps.length, 1);
-    assert.strictEqual(deps[0], descriptor);
-    // simulate unmet engine dependency
-    descriptor.engines = {
-        "ringojs": "0.0"
-    };
-    assert.throws(function() {
-        packages.resolveDependencies(descriptor);
-    }, Error);
-    // TODO: need to mock registry for all other tests
+exports.testGetActivatedVersions = function() {
+    var pkgs = [
+        {"name": "one", "version": "0.1beta1"},
+        {"name": "two", "version": "1.1.2"}
+    ];
+    for each (let {name, version} in pkgs) {
+        createLink(createTestPackage(installDir, name, version), name);
+    }
+    var activatedVersions = packages.getActivatedVersions();
+    for each (let {name, version} in pkgs) {
+        assert.strictEqual(activatedVersions[name], semver.cleanVersion(version));
+    }
 };
 
 //start the test runner if we're called directly from command line
 if (require.main == module.id) {
-    system.exit(require('test').run(exports));
+    var {run} = require("test");
+    if (system.args.length > 1) {
+        system.exit(run(exports, system.args.pop()));
+    }
+    system.exit(run(exports));
 }
