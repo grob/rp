@@ -3,19 +3,6 @@ var {Resolver} = require("../lib/rp/utils/resolver");
 var registry = require("../lib/rp/utils/registry");
 var semver = require("../lib/rp/utils/semver");
 
-/**
- * Mock cache implementation, used to override the cache the registry module uses
- * @param {Object} catalog The catalog to use
- */
-var MockCache = function(catalog) {
-
-    this.get = function() {
-        return catalog;
-    };
-
-};
-
-
 exports.testToVersion = function() {
     var versions = [
         "0.0.0",
@@ -119,7 +106,7 @@ exports.testIsValidRange = function() {
 };
 
 exports.testEngineDependencies = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
        "A": {
            "name": "A",
            "versions": {
@@ -130,7 +117,7 @@ exports.testEngineDependencies = function() {
                }
            }
        }
-    }));
+    });
     var resolver = new Resolver(registry);
     assert.throws(function() {
         resolver.resolve("A", "0.1");
@@ -138,7 +125,7 @@ exports.testEngineDependencies = function() {
 };
 
 exports.testResolveNoDependencies = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -157,7 +144,7 @@ exports.testResolveNoDependencies = function() {
                 }
             ]
         }
-    }));
+    });
 
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
@@ -169,7 +156,7 @@ exports.testResolveNoDependencies = function() {
 };
 
 exports.testSingleDependency = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -191,7 +178,7 @@ exports.testSingleDependency = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     var [name, version] = ["A", "0.1.0"];
     // resolve the same twice - just to be sure nothing breaks
@@ -207,7 +194,7 @@ exports.testSingleDependency = function() {
 };
 
 exports.testMissingDependency = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -230,7 +217,7 @@ exports.testMissingDependency = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     assert.throws(function() {
         resolver.resolve("A", "0.1");
@@ -238,7 +225,7 @@ exports.testMissingDependency = function() {
 };
 
 exports.testSimpleCircular = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -263,7 +250,7 @@ exports.testSimpleCircular = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
     var {A, B} = resolver.resolved;
@@ -282,7 +269,7 @@ exports.testSimpleCircular = function() {
 };
 
 exports.testCircularMultipleVersions = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -321,7 +308,7 @@ exports.testCircularMultipleVersions = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
     var {A, B} = resolver.resolved;
@@ -340,7 +327,7 @@ exports.testCircularMultipleVersions = function() {
 };
 
 exports.testCircularCompatible = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -372,7 +359,7 @@ exports.testCircularCompatible = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
     var {A, B} = resolver.resolved;
@@ -389,7 +376,7 @@ exports.testCircularCompatible = function() {
 };
 
 exports.testCircularUpgrade = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -418,7 +405,7 @@ exports.testCircularUpgrade = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
     var {A, B} = resolver.resolved;
@@ -435,7 +422,7 @@ exports.testCircularUpgrade = function() {
 };
 
 exports.testComplexSolvable = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -474,7 +461,7 @@ exports.testComplexSolvable = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
     var {A, B, C} = resolver.resolved;
@@ -495,7 +482,7 @@ exports.testComplexSolvable = function() {
 };
 
 exports.testComplex3unsolvable = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -534,7 +521,7 @@ exports.testComplex3unsolvable = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     assert.throws(function() {
         resolver.resolve("A", "0.1");
@@ -547,7 +534,7 @@ exports.testComplex3unsolvable = function() {
 };
 
 exports.testCircular3 = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -584,7 +571,7 @@ exports.testCircular3 = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
     var {A, B, C} = resolver.resolved;
@@ -605,7 +592,7 @@ exports.testCircular3 = function() {
 };
 
 exports.testComplex3solvable = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -657,7 +644,7 @@ exports.testComplex3solvable = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
     var {A, B, C} = resolver.resolved;
@@ -678,7 +665,7 @@ exports.testComplex3solvable = function() {
 };
 
 exports.testComplex3solvable2 = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -722,7 +709,7 @@ exports.testComplex3solvable2 = function() {
                 }
             ]
         }
-    }));
+    });
     var resolver = new Resolver(registry);
     resolver.resolve("A", "0.1");
     var {A, B, C} = resolver.resolved;

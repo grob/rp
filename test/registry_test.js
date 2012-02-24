@@ -1,20 +1,8 @@
 var assert = require("assert");
 var registry = require("../lib/rp/utils/registry");
 
-/**
- * Mock cache implementation, used to override the cache the registry module uses
- * @param {Object} catalog The catalog to use
- */
-var MockCache = function(catalog) {
-
-    this.get = function() {
-        return catalog;
-    };
-
-};
-
 exports.testExists = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -28,7 +16,7 @@ exports.testExists = function() {
                 }
             ]
         }
-    }));
+    });
     assert.isTrue(registry.exists("A"));
     assert.isTrue(registry.exists("A", "0.1.0"));
     assert.isTrue(registry.exists("A", "1.0.0"));
@@ -54,7 +42,7 @@ exports.testGetPackageDescriptor = function() {
             ]
         }
     };
-    registry.setCache(new MockCache(catalog));
+    registry.cache.set(catalog);
     assert.isNotNull(registry.getPackageDescriptor("A"));
     // returns latest version if no version specified
     assert.strictEqual(registry.getPackageDescriptor("A"),
@@ -67,7 +55,7 @@ exports.testGetPackageDescriptor = function() {
 };
 
 exports.testIsLatest = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A":{
             "name":"A",
             "versions":[
@@ -83,7 +71,7 @@ exports.testIsLatest = function() {
                 }
             ]
         }
-    }));
+    });
     // version argument is mandatory
     assert.throws(function() {
         registry.isLatest("A");
@@ -93,7 +81,7 @@ exports.testIsLatest = function() {
 };
 
 exports.testGetLatestCompatible = function() {
-    registry.setCache(new MockCache({
+    registry.cache.set({
         "A": {
             "name": "A",
             "versions": [
@@ -115,7 +103,7 @@ exports.testGetLatestCompatible = function() {
                 }
             ]
         }
-    }));
+    });
     assert.strictEqual(registry.getLatestCompatible("A", "0.1.0").version, "0.2.1");
     assert.strictEqual(registry.getLatestCompatible("A", "1.0.0").version, "1.0.0");
     assert.throws(function() {
