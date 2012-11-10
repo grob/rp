@@ -4,23 +4,19 @@ var config = require("../lib/rp/utils/config");
 var semver = require("../lib/rp/utils/semver");
 var fs = require("fs");
 
-const testDir = fs.normal(fs.join(java.lang.System.getProperty("java.io.tmpdir"), "rptest"));
-const packagesDir = fs.normal(fs.join(testDir, "packages/"));
-const installDir = fs.normal(fs.join(testDir, "packages.available/"));
+const tmpDir = fs.canonical(java.lang.System.getProperty("java.io.tmpdir"));
+const testDir = fs.canonical(fs.join(tmpDir, "rptest"));
+const packagesDir = fs.canonical(fs.join(testDir, "packages"));
 
 const pkgName = "test";
 const pkgVersion = "0.1";
 
-var createTestPackage = function(dir, name, version, omitVersion) {
-    version = semver.cleanVersion(version);
+var createTestPackage = function(dir, name, version) {
     var packageDir = fs.normal(fs.join(dir, name));
-    if (omitVersion !== true) {
-        packageDir += "-" + version;
-    }
     fs.makeTree(packageDir);
     var json = JSON.stringify({
         "name": name,
-        "version": version
+        "version": (version && semver.cleanVersion(version)) || pkgVersion
     });
     fs.write(fs.join(packageDir, "package.json"), json);
     return packageDir;
@@ -37,8 +33,6 @@ var createLink = function(sourceDir, name) {
 
 exports.setUp = function() {
     fs.makeTree(packagesDir);
-    // FIXME: need to create the install dir - can this happen in real life?
-    fs.makeDirectory(installDir);
     config.setConfig({
         "ringoHome": testDir,
         "repositoryUrl": "http://localhost:8123"
@@ -50,207 +44,121 @@ exports.tearDown = function() {
     fs.removeTree(testDir);
 };
 
-exports.testGetInstallDir = function() {
-    assert.strictEqual(packages.getInstallDir(), installDir);
-    assert.strictEqual(packages.getInstallDir(pkgName, pkgVersion),
-            fs.normal(fs.join(installDir, pkgName + "-" + pkgVersion)));
+exports.testGetPackagesDir = function() {
+    assert.strictEqual(packages.getPackagesDir(testDir), packagesDir);
     return;
 };
 
-exports.testGetPackagesDir = function() {
-    assert.strictEqual(packages.getPackagesDir(), packagesDir);
-    return;
+exports.testGetLocalDir = function() {
+    /**
+     *   tmpDir/
+     *   tmpDir/testDir
+     *   tmpDir/testDir/subdir
+     *   tmpDir/testDir/packages
+     *   tmpDir/testDir/packages/packagedir
+     *   tmpDir/testDir/packages/packagedir/package.json
+     *   tmpDIr/appDir/package.json
+     */
+    var subDir = fs.canonical(fs.join(testDir, "subdir"));
+    var packageDir = fs.canonical(fs.join(packagesDir, "packagedir"));
+    var appDir = fs.canonical(fs.join(tmpDir, "appdir"));
+    fs.makeDirectory(subDir);
+    fs.makeDirectory(packageDir);
+    // FIXME: fs.touch doesn't create an empty file, therefor using write
+    fs.write(fs.join(packageDir, "package.json"));
+    assert.isTrue(fs.exists(fs.join(packageDir, "package.json")));
+    if (fs.exists(appDir)) {
+        fs.removeTree(appDir);
+    }
+    fs.makeDirectory(appDir);
+    fs.write(fs.join(appDir, "package.json"));
+    assert.isTrue(fs.exists(fs.join(appDir, "package.json")));
+
+    // if in tmpDir returns the tmpDir because there's neither a
+    // package.json file nor a "packages" directory in it or in one of its parents
+    fs.changeWorkingDirectory(tmpDir);
+    assert.strictEqual(packages.getLocalDir(), tmpDir);
+
+    // if in testDir returns the testDir because it contains a "packages" directory
+    fs.changeWorkingDirectory(testDir);
+    assert.strictEqual(packages.getLocalDir(), testDir);
+    // if in testDir/subdir returns the testDir because the subdir doesn't contain
+    // a package.json file or a "packages" directory (but the parent directory does)
+    fs.changeWorkingDirectory(subDir);
+    assert.strictEqual(packages.getLocalDir(), testDir);
+    // if in testDir/packages returns the testDir
+    fs.changeWorkingDirectory(packagesDir);
+    assert.strictEqual(packages.getLocalDir(), testDir);
+    // if in testDir/packages/packagedir returns the packageDir since it contains
+    // a package.json file
+    fs.changeWorkingDirectory(packageDir);
+    assert.strictEqual(packages.getLocalDir(), packageDir);
+
+    // from inside the appDir returns the appDir since it contains
+    // a package.json file
+    fs.changeWorkingDirectory(appDir);
+    assert.strictEqual(packages.getLocalDir(), appDir);
+};
+
+exports.testGetGlobalDir = function() {
+    assert.strictEqual(packages.getGlobalDir(), testDir);
+};
+
+exports.testIsZipFile = function() {
+    assert.isTrue(packages.isZipFile("test.zip"));
+    assert.isFalse(packages.isZipFile("test.zip.tmp"));
+};
+
+exports.testIsUrl = function() {
+    assert.isTrue(packages.isUrl("http://ringojs.org"));
+    assert.isTrue(packages.isUrl("https://packages.ringojs.org"));
+    assert.isFalse(packages.isUrl("ftp://ringojs.org"));
+    assert.isFalse(packages.isUrl("mailto://rpr@example.com"));
+};
+
+exports.testIsInstalled = function() {
+    assert.isFalse(packages.isInstalled(packagesDir, pkgName));
+    createTestPackage(packagesDir, pkgName);
+    assert.isTrue(packages.isInstalled(packagesDir, pkgName));
 };
 
 exports.testGetDescriptor = function() {
-    var packageDir = createTestPackage(installDir, pkgName, pkgVersion);
+    var packageDir = createTestPackage(packagesDir, pkgName, pkgVersion);
     var descriptor = packages.getDescriptor(packageDir);
     assert.isNotNull(descriptor);
     assert.strictEqual(descriptor.name, pkgName);
     assert.strictEqual(descriptor.version, semver.cleanVersion(pkgVersion));
 };
 
-exports.testActivate = function() {
-    // package isn't installed
-    assert.throws(function() {
-        packages.activate(pkgName, pkgVersion);
-    }, Error);
-    var packageDir = createTestPackage(installDir, pkgName, pkgVersion);
-    // version 0.1 isn't installed - it's clean version 0.1.0 is
-    assert.throws(function() {
-        packages.activate(pkgName, "0.1");
-    }, Error);
-    // version 0.2 isn't installed
-    assert.throws(function() {
-        packages.activate(pkgName, "0.2");
-    }, Error);
-    var link = packages.activate(pkgName, semver.cleanVersion(pkgVersion));
-    assert.isNotNull(link);
-    assert.isTrue(fs.exists(link));
-    assert.isTrue(fs.isLink(link));
-    // link destination be the directory the package has been installed in
-    assert.strictEqual(fs.normal(fs.join(packagesDir, fs.readLink(link))), packageDir);
-    // check package.json descriptor
-    var json = fs.normal(fs.join(packagesDir, fs.readLink(link), "package.json"));
-    assert.isTrue(fs.exists(json));
-    var descriptor = JSON.parse(fs.read(json));
-    assert.strictEqual(descriptor.name, pkgName);
-    assert.strictEqual(descriptor.version, semver.cleanVersion(pkgVersion));
+exports.testInstall = function() {
+    var name = "testpackage";
+    var version = "1.0.1";
+    // archivePath, dir, name, version
+    packages.install(module.resolve("./testpackage.zip"), packagesDir,
+            name, version);
+    assert.isTrue(fs.exists(fs.join(packagesDir, name)));
+    assert.isTrue(packages.isInstalled(packagesDir, name));
+    // all files in "bin" directory should be executable
+    var binDir = fs.join(packagesDir, name, "bin");
+    var sh = fs.join(binDir, "test.sh");
+    var cmd = fs.join(binDir, "test.cmd")
+    assert.strictEqual(fs.permissions(sh).toNumber(), 0755);
+    assert.strictEqual(fs.permissions(cmd).toNumber(), 0755);
 };
 
-exports.testActivateCopied = function() {
-    // create package in both packageDir and installDir
-    createTestPackage(installDir, pkgName, pkgVersion);
-    createTestPackage(packagesDir, pkgName, pkgVersion, true);
-    // activate must throw error because test package has been copied into
-    // the packages directory
+exports.testUninstall = function() {
+    var name = "testpackage";
+    var version = "1.0.1";
     assert.throws(function() {
-        packages.activate(pkgName, semver.cleanVersion(pkgVersion));
-    }, Error);
-};
-
-exports.testActivateUnmanaged = function() {
-    createTestPackage(installDir, pkgName, pkgVersion);
-    // create package in directory out of packages.available and link
-    // it into packages directory to simulate a package that is active
-    // but has not been installed in packages.available
-    var source = createTestPackage(testDir, pkgName, pkgVersion);
-    var link = createLink(source, pkgName);
-    assert.throws(function() {
-        packages.activate(pkgName, semver.cleanVersion(pkgVersion));
-    }, Error);
-    // symlink is left untouched
-    assert.isTrue(fs.exists(link));
-    assert.strictEqual(fs.relative(packagesDir, source), fs.readLink(link));
-};
-
-exports.testDeactivate = function() {
-    createTestPackage(installDir, pkgName, pkgVersion);
-    // package isn't active
-    assert.throws(function() {
-        packages.deactivate(pkgName);
+        packages.uninstall(packagesDir, name);
     });
-    var link = packages.activate(pkgName, semver.cleanVersion(pkgVersion));
-    assert.isTrue(fs.exists(link));
-    assert.isTrue(fs.isLink(link));
-    packages.deactivate(pkgName);
-    assert.isFalse(fs.exists(link));
-};
-
-exports.testDeactivateCopied = function() {
-    // simulate a package that has been directly installed in packages directory
-    var dir = createTestPackage(packagesDir, pkgName, pkgVersion, true);
-    assert.throws(function() {
-        packages.deactivate(pkgName);
-    }, Error);
-    // package directory is left untouched
-    assert.isTrue(fs.exists(dir));
-    assert.isTrue(fs.isDirectory(dir));
-};
-
-exports.testDeactivateUnmanaged = function() {
-    // create package in directory out of packages.available and link
-    // it into packages directory to simulate a package that is active
-    // but has not been installed in packages.available
-    var source = createTestPackage(testDir, pkgName, pkgVersion);
-    var link = createLink(source, pkgName);
-    assert.throws(function() {
-        packages.deactivate(pkgName);
-    });
-    // symlink is left untouched
-    assert.isTrue(fs.exists(link));
-    assert.strictEqual(fs.relative(packagesDir, source), fs.readLink(link));
-};
-
-exports.testIsManaged = function() {
-    var source = createTestPackage(installDir, pkgName, pkgVersion);
-    var link = createLink(source, pkgName);
-    assert.isTrue(packages.isManaged(link));
-    // link is pointing outside packages.available directory
-    fs.removeDirectory(link);
-    assert.isFalse(fs.exists(link));
-    source = createTestPackage(testDir, pkgName, pkgVersion);
-    link = createLink(source, pkgName);
-    assert.isFalse(packages.isManaged(link));
-    // package is directly installed in packages directory
-    fs.removeDirectory(link);
-    assert.isFalse(fs.exists(link));
-    source = createTestPackage(packagesDir, pkgName, pkgVersion);
-    assert.isFalse(packages.isManaged(source));
-};
-
-exports.testIsActivated = function() {
-    assert.isFalse(packages.isActivated(pkgName, pkgVersion));
-    var dir = createTestPackage(installDir, pkgName, pkgVersion);
-    createLink(dir, pkgName);
-    // returns false because method expects a clean semver version
-    assert.isFalse(packages.isActivated(pkgName, pkgVersion));
-    assert.isTrue(packages.isActivated(pkgName, semver.cleanVersion(pkgVersion)));
-    assert.isFalse(packages.isActivated(pkgName, semver.cleanVersion("0.2")));
-};
-
-exports.testIsInstalled = function() {
-    assert.isFalse(packages.isInstalled(pkgName));
-    assert.isFalse(packages.isInstalled(pkgName, pkgVersion));
-    createTestPackage(installDir, pkgName, pkgVersion);
-    assert.isTrue(packages.isInstalled(pkgName));
-    // returns false because method expects a clean semver version
-    assert.isFalse(packages.isInstalled(pkgName, pkgVersion));
-    assert.isTrue(packages.isInstalled(pkgName, semver.cleanVersion(pkgVersion)));
-};
-
-exports.testGetInstalledVersions = function() {
-    assert.strictEqual(packages.getInstalledVersions(pkgName).length, 0);
-    createTestPackage(installDir, pkgName, pkgVersion);
-    var versions = packages.getInstalledVersions(pkgName);
-    assert.strictEqual(versions.length, 1);
-    assert.strictEqual(versions[0], semver.cleanVersion(pkgVersion));
-    // another version
-    createTestPackage(installDir, pkgName, "0.2");
-    versions = packages.getInstalledVersions(pkgName);
-    assert.strictEqual(versions.length, 2);
-    // resulting version array is sorted desc
-    assert.strictEqual(versions[0], semver.cleanVersion("0.2"));
-    assert.strictEqual(versions[1], semver.cleanVersion(pkgVersion));
-};
-
-exports.testGetLatestInstalledVersion = function() {
-    createTestPackage(installDir, pkgName, pkgVersion);
-    createTestPackage(installDir, pkgName, "0.2");
-    assert.strictEqual(packages.getLatestInstalledVersion(pkgName),
-            semver.cleanVersion("0.2"));
-};
-
-exports.testGetLatestInstalledVersions = function() {
-    createTestPackage(installDir, "one", "0.1beta1");
-    createTestPackage(installDir, "one", "0.2");
-    createTestPackage(installDir, "two", "0.2.10");
-    createTestPackage(installDir, "two", "0.3");
-    var versions = packages.getLatestInstalledVersions();
-    assert.strictEqual(Object.keys(versions).length, 2);
-    assert.strictEqual(versions["one"], "0.2.0");
-    assert.strictEqual(versions["two"], "0.3.0");
-};
-
-exports.testGetActivatedVersion = function() {
-    var dir = createTestPackage(installDir, pkgName, pkgVersion);
-    createLink(dir, pkgName);
-    assert.strictEqual(packages.getActivatedVersion(pkgName),
-            semver.cleanVersion(pkgVersion));
-};
-
-exports.testGetActivatedVersions = function() {
-    var pkgs = [
-        {"name": "one", "version": "0.1beta1"},
-        {"name": "two", "version": "1.1.2"}
-    ];
-    for each (let {name, version} in pkgs) {
-        createLink(createTestPackage(installDir, name, version), name);
-    }
-    var activatedVersions = packages.getActivatedVersions();
-    for each (let {name, version} in pkgs) {
-        assert.strictEqual(activatedVersions[name], semver.cleanVersion(version));
-    }
+    packages.install(module.resolve("./testpackage.zip"), packagesDir,
+            name, version);
+    assert.isTrue(packages.isInstalled(packagesDir, name));
+    var installDir = fs.canonical(fs.join(packagesDir, name));
+    assert.strictEqual(packages.uninstall(packagesDir, name), installDir);
+    assert.isFalse(packages.isInstalled(packagesDir, name));
+    assert.isFalse(fs.exists(installDir));
 };
 
 //start the test runner if we're called directly from command line

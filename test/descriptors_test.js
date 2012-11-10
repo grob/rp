@@ -3,70 +3,70 @@ var descriptors = require("../lib/rp/utils/descriptors");
 
 exports.testCheckName = function() {
     assert.throws(function() {
-        descriptors.checkName(null);
+        descriptors.verifyName(null);
     });
     assert.throws(function() {
-        descriptors.checkName(undefined);
+        descriptors.verifyyName(undefined);
     });
     assert.throws(function() {
-        descriptors.checkName("invalid?");
+        descriptors.verifyName("invalid?");
     });
-    descriptors.checkName("abc0123456789._- ");
+    descriptors.verifyName("abc0123456789._- ");
 };
 
 exports.testCheckVersion = function() {
     assert.throws(function() {
-        descriptors.checkVersion(null);
+        descriptors.verifyVersion(null);
     });
     assert.throws(function() {
-        descriptors.checkVersion(undefined);
+        descriptors.verifyVersion(undefined);
     });
     assert.throws(function() {
-        descriptors.checkVersion("<> 1.2.3.4");
+        descriptors.verifyVersion("<> 1.2.3.4");
     });
 };
 
 exports.testCheckKeywords = function() {
     assert.throws(function() {
-        descriptors.checkKeywords();
+        descriptors.verifyKeywords();
     });
     assert.throws(function() {
-        descriptors.checkKeywords(null);
+        descriptors.verifyKeywords(null);
     });
     assert.throws(function() {
-        descriptors.checkKeywords({});
+        descriptors.verifyKeywords({});
     });
     assert.throws(function() {
-        descriptors.checkKeywords([]);
+        descriptors.verifyKeywords([]);
     });
 };
 
 exports.testCheckEngines = function() {
     assert.throws(function() {
-        descriptors.checkEngines();
+        descriptors.verifyEngines();
     });
     assert.throws(function() {
-        descriptors.checkEngines(null);
+        descriptors.verifyEngines(null);
     });
     assert.throws(function() {
-        descriptors.checkEngines(["ringojs", "rhino"]);
+        descriptors.verifyEngines(["ringojs", "rhino"]);
     });
 };
 
 exports.testCheckDependencies = function() {
     assert.throws(function() {
-        descriptors.checkDependencies();
+        descriptors.verifyDependencies();
     });
     assert.throws(function() {
-        descriptors.checkDependencies(null);
+        descriptors.verifyDependencies(null);
     });
     // invalid version number
     assert.throws(function() {
-        descriptors.checkDependencies({
+        descriptors.verifyDependencies({
             "rp": "!= 1.2.3.4."
         });
     });
-    assert.isTrue(descriptors.checkDependencies({
+    assert.isTrue(descriptors.verifyDependencies({
         "rp": ">= 0.1"
     }));
 };
@@ -92,14 +92,14 @@ exports.testHasEngineDependency = function() {
 
 exports.testCheckEngineDependency = function() {
     assert.throws(function() {
-        descriptors.checkEngineDependency({
+        descriptors.verifyEngineDependency({
             "name": "test",
             "engines": {
                 "ringojs": ">= 0.8"
             }
         }, "0.7");
     });
-    assert.isTrue(descriptors.checkEngineDependency({
+    assert.isTrue(descriptors.verifyEngineDependency({
         "name": "test",
         "engines": {
             "ringojs": ">= 0.8"
@@ -109,67 +109,67 @@ exports.testCheckEngineDependency = function() {
 
 exports.testCheckAuthorData = function() {
     assert.throws(function() {
-        descriptors.checkAuthorData();
+        descriptors.verifyAuthorData();
     });
     assert.throws(function() {
-        descriptors.checkAuthorData(null);
+        descriptors.verifyAuthorData(null);
     });
     assert.throws(function() {
-        descriptors.checkAuthorData({
+        descriptors.verifyAuthorData({
             "noname": "no name"
         });
     });
-    assert.isTrue(descriptors.checkAuthorData("John Doe"));
-    assert.isTrue(descriptors.checkAuthorData({
+    assert.isTrue(descriptors.verifyAuthorData("John Doe"));
+    assert.isTrue(descriptors.verifyAuthorData({
         "name": "John Doe"
     }));
 };
 
 exports.testCheckAuthor = function() {
     assert.throws(function() {
-        descriptors.checkAuthor();
+        descriptors.verifyAuthor();
     });
     assert.throws(function() {
-        descriptors.checkAuthor(null);
+        descriptors.verifyAuthor(null);
     });
     assert.throws(function() {
-        descriptors.checkAuthor({});
+        descriptors.verifyAuthor({});
     });
-    assert.isTrue(descriptors.checkAuthor({
+    assert.isTrue(descriptors.verifyAuthor({
         "author": "John Doe"
     }));
-    assert.isTrue(descriptors.checkAuthor({
+    assert.isTrue(descriptors.verifyAuthor({
         "contributors": ["John Doe"]
     }));
 };
 
 exports.testCheckHashList = function() {
     assert.throws(function() {
-        descriptors.checkHashList();
+        descriptors.verifyHashList();
     });
     assert.throws(function() {
-        descriptors.checkHashList(null);
+        descriptors.verifyHashList(null);
     });
     assert.throws(function() {
-        descriptors.checkHashList([]);
+        descriptors.verifyHashList([]);
     });
     assert.throws(function() {
-        descriptors.checkHashList([{}]);
+        descriptors.verifyHashList([{}]);
     });
     assert.throws(function() {
-        descriptors.checkHashList([{"prop": "value"}], "test", ["nonexisting"]);
+        descriptors.verifyHashList([{"prop": "value"}], "test", ["nonexisting"]);
     });
-    assert.isTrue(descriptors.checkHashList([{"prop": "value"}], "test", ["prop"]));
+    assert.isTrue(descriptors.verifyHashList([{"prop": "value"}], "test", ["prop"]));
 };
 
 exports.testCheckRepositories = function() {
     assert.throws(function() {
-        descriptors.checkRepositories([{"type": "git"}]);
+        descriptors.verifyRepositories([{"type": "git"}]);
     });
     assert.throws(function() {
-        descriptors.checkRepositories([{"url": "somewhere"}]);
+        descriptors.verifyRepositories([{"url": "somewhere"}]);
     });
-    assert.isTrue(descriptors.checkRepositories([{
+    assert.isTrue(descriptors.verifyRepositories([{
             "type": "git",
             "url": "somewhere"
         },
@@ -182,12 +182,12 @@ exports.testCheckRepositories = function() {
 
 exports.testCheckLicenses = function() {
     assert.throws(function() {
-        descriptors.checkLicenses([{"type": "git"}]);
+        descriptors.verifyLicenses([{"type": "git"}]);
     });
     assert.throws(function() {
-        descriptors.checkLicenses([{"url": "somewhere"}]);
+        descriptors.verifyLicenses([{"url": "somewhere"}]);
     });
-    assert.isTrue(descriptors.checkLicenses([{
+    assert.isTrue(descriptors.verifyLicenses([{
             "type": "git",
             "url": "somewhere"
         },
@@ -206,6 +206,27 @@ exports.testSanitizeHashList = function() {
     assert.strictEqual(Object.keys(arr[0])[0], "one");
     // string values are trimmed
     assert.strictEqual(arr[0]["one"], "one");
+};
+
+exports.testVerifyAuthor = function() {
+    assert.throws(function() {
+        descriptors.verifyAuthor({});
+    });
+    assert.throws(function() {
+        descriptors.verifyAuthor({
+            "author": ""
+        });
+    });
+    assert.throws(function() {
+        descriptors.verifyAuthor({
+            "author": null
+        });
+    });
+    assert.throws(function() {
+        descriptors.verifyAuthor({
+            "contributors": []
+        });
+    });
 };
 
 //start the test runner if we're called directly from command line
