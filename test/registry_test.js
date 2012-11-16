@@ -113,6 +113,7 @@ exports.testGetLatestCompatible = function() {
 
 //start the test runner if we're called directly from command line
 if (require.main == module.id) {
+    var system = require('system');
     var {run} = require("test");
     if (system.args.length > 1) {
         system.exit(run(exports, system.args.pop()));
