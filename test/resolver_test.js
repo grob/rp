@@ -1,3 +1,4 @@
+var system = require("system");
 var assert = require("assert");
 var {Resolver} = require("../lib/rp/utils/resolver");
 var registry = require("../lib/rp/utils/registry");
@@ -46,7 +47,7 @@ exports.testGetMaxLow = function() {
         [[">=", "0.1", ">", "0.1"], [">", "0.1"]],
         [[">", "0.1", ">=", "0.1"], [">", "0.1"]],
         // equal versions, equal operators
-        [[">", "0.1", ">", "0.1"], [">", "0.1"]],
+        [[">", "0.1", ">", "0.1"], [">", "0.1"]]
     ];
     for each (let test in tests) {
         var ranges = test[0];
@@ -68,7 +69,7 @@ exports.testGetMinHigh = function() {
         [["<=", "0.1", "<", "0.1"], ["<", "0.1"]],
         [["<", "0.1", "<=", "0.1"], ["<", "0.1"]],
         // equal versions, equal operators
-        [["<", "0.1", "<", "0.1"], ["<", "0.1"]],
+        [["<", "0.1", "<", "0.1"], ["<", "0.1"]]
     ];
     for each (let test in tests) {
         var ranges = test[0];
@@ -87,7 +88,7 @@ exports.testIsValidRange = function() {
         [">=", "0.1.0", "<", "0.1.1alpha1"],
         [">", "0.1.0alpha1", "<=", "0.1.0"],
         // equal version requires >= and <= operators
-        [">=", "0.1.0alpha1", "<=", "0.1.0alpha1"],
+        [">=", "0.1.0alpha1", "<=", "0.1.0alpha1"]
     ];
     var invalid = [
         [">=", "0.1.1", "<", "0.1.0"],
@@ -95,7 +96,7 @@ exports.testIsValidRange = function() {
         [">=", "0.1.0alpha2", "<=", "0.1.0alpha1"],
         // equal version requires >= and <= operators
         [">", "0.1.0alpha1", "<=", "0.1.0alpha1"],
-        [">=", "0.1.0alpha1", "<", "0.1.0alpha1"],
+        [">=", "0.1.0alpha1", "<", "0.1.0alpha1"]
     ];
     for each (let test in valid) {
         assert.isTrue(Resolver.isValidRange.apply(null, test), test.toSource());

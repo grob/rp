@@ -1,3 +1,4 @@
+var system = require("system");
 var assert = require("assert");
 var registry = require("../lib/rp/utils/registry");
 

@@ -1,3 +1,5 @@
+var system = require("system");
+
 exports.testDescriptors = require("./descriptors_test");
 exports.testPackages = require("./packages_test");
 exports.testRegistry = require("./registry_test");
