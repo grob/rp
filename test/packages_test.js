@@ -1,8 +1,8 @@
 var system = require("system");
 var assert = require("assert");
-var packages = require("../lib/rp/utils/packages");
-var config = require("../lib/rp/utils/config");
-var semver = require("../lib/rp/utils/semver");
+var packages = require("../lib/utils/packages");
+var config = require("../lib/utils/config");
+var semver = require("../lib/utils/semver");
 var fs = require("fs");
 
 const tmpDir = fs.canonical(java.lang.System.getProperty("java.io.tmpdir"));

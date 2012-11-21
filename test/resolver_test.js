@@ -1,8 +1,8 @@
 var system = require("system");
 var assert = require("assert");
-var {Resolver} = require("../lib/rp/utils/resolver");
-var registry = require("../lib/rp/utils/registry");
-var semver = require("../lib/rp/utils/semver");
+var {Resolver} = require("../lib/utils/resolver");
+var registry = require("../lib/utils/registry");
+var semver = require("../lib/utils/semver");
 
 exports.testToVersion = function() {
     var versions = [

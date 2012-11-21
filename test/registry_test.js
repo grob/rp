@@ -1,6 +1,6 @@
 var system = require("system");
 var assert = require("assert");
-var registry = require("../lib/rp/utils/registry");
+var registry = require("../lib/utils/registry");
 
 exports.testExists = function() {
     registry.cache.set({

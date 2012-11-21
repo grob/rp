@@ -1,6 +1,6 @@
 var system = require("system");
 var assert = require("assert");
-var descriptors = require("../lib/rp/utils/descriptors");
+var descriptors = require("../lib/utils/descriptors");
 
 exports.testCheckName = function() {
     assert.throws(function() {
