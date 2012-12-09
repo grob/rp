@@ -8,6 +8,7 @@ var fs = require("fs");
 const tmpDir = fs.canonical(java.lang.System.getProperty("java.io.tmpdir"));
 const testDir = fs.canonical(fs.join(tmpDir, "rptest"));
 const packagesDir = fs.canonical(fs.join(testDir, "packages"));
+const binDir = fs.canonical(fs.join(testDir, "bin"));
 
 const pkgName = "test";
 const pkgVersion = "0.1";
@@ -31,6 +32,7 @@ var createDescriptor = function(packageDir, name, version) {
 
 exports.setUp = function() {
     fs.makeTree(packagesDir);
+    fs.makeTree(binDir);
     config.setConfig({
         "ringoHome": testDir,
         "repositoryUrl": "http://localhost:8123"
@@ -138,12 +140,16 @@ exports.testInstall = function() {
             name, version);
     assert.isTrue(fs.exists(fs.join(packagesDir, name)));
     assert.isTrue(packages.isInstalled(packagesDir, name));
-    // all files in "bin" directory should be executable
-    var binDir = fs.join(packagesDir, name, "bin");
-    var sh = fs.join(binDir, "test.sh");
-    var cmd = fs.join(binDir, "test.cmd")
-    assert.strictEqual(fs.permissions(sh).toNumber(), 0755);
-    assert.strictEqual(fs.permissions(cmd).toNumber(), 0755);
+    // all files in "bin" directory should be executable and
+    // be linked from ringo's bin directory
+    var packageBinDir = fs.join(packagesDir, name, "bin");
+    for each (let name in fs.list(packageBinDir)) {
+        let file = fs.join(packageBinDir, name);
+        let link = fs.join(binDir, name);
+        assert.strictEqual(fs.permissions(file).toNumber(), 0755);
+        assert.isTrue(fs.exists(link));
+        assert.isTrue(fs.same(link, file));
+    }
 };
 
 exports.testUninstall = function() {
@@ -156,9 +162,15 @@ exports.testUninstall = function() {
             name, version);
     assert.isTrue(packages.isInstalled(packagesDir, name));
     var installDir = fs.canonical(fs.join(packagesDir, name));
+    var packageBinDir = fs.join(packagesDir, name, "bin");
+    var binFiles = fs.list(packageBinDir);
     assert.strictEqual(packages.uninstall(packagesDir, name), installDir);
     assert.isFalse(packages.isInstalled(packagesDir, name));
     assert.isFalse(fs.exists(installDir));
+    for each (let name in binFiles) {
+        let link = fs.join(binDir, name);
+        assert.isFalse(fs.exists(link));
+    }
 };
 
 exports.testIsInstallable = function() {
