@@ -15,21 +15,18 @@ const pkgVersion = "0.1";
 var createTestPackage = function(dir, name, version) {
     var packageDir = fs.normal(fs.join(dir, name));
     fs.makeTree(packageDir);
+    createDescriptor(packageDir, name, version);
+    return packageDir;
+};
+
+var createDescriptor = function(packageDir, name, version) {
     var json = JSON.stringify({
         "name": name,
         "version": (version && semver.cleanVersion(version)) || pkgVersion
     });
-    fs.write(fs.join(packageDir, "package.json"), json);
-    return packageDir;
-};
-
-var createLink = function(sourceDir, name) {
-    var relSource = fs.relative(packagesDir, sourceDir);
-    var dest = fs.join(packagesDir, name);
-    assert.isTrue(fs.symbolicLink(relSource, dest) >= 0);
-    assert.isTrue(fs.exists(dest));
-    assert.isTrue(fs.isLink(dest));
-    return dest;
+    var path = fs.join(packageDir, packages.PACKAGE_JSON);
+    fs.write(path, json);
+    return path;
 };
 
 exports.setUp = function() {
@@ -119,13 +116,15 @@ exports.testIsUrl = function() {
 
 exports.testIsInstalled = function() {
     assert.isFalse(packages.isInstalled(packagesDir, pkgName));
+    assert.isFalse(packages.isInstalled(fs.join(packagesDir, pkgName)));
     createTestPackage(packagesDir, pkgName);
     assert.isTrue(packages.isInstalled(packagesDir, pkgName));
+    assert.isTrue(packages.isInstalled(fs.join(packagesDir, pkgName)));
 };
 
 exports.testGetDescriptor = function() {
     var packageDir = createTestPackage(packagesDir, pkgName, pkgVersion);
-    var descriptor = packages.getDescriptor(packageDir);
+    var descriptor = packages.getDescriptor(packagesDir, pkgName);
     assert.isNotNull(descriptor);
     assert.strictEqual(descriptor.name, pkgName);
     assert.strictEqual(descriptor.version, semver.cleanVersion(pkgVersion));
@@ -160,6 +159,124 @@ exports.testUninstall = function() {
     assert.strictEqual(packages.uninstall(packagesDir, name), installDir);
     assert.isFalse(packages.isInstalled(packagesDir, name));
     assert.isFalse(fs.exists(installDir));
+};
+
+exports.testIsInstallable = function() {
+    var name = "testpackage";
+    // package isn't installed
+    assert.strictEqual(packages.isInstallable(packagesDir, name),
+            packages.OK);
+    // file with same name exists
+    var packageDir = fs.join(packagesDir, name);
+    fs.touch(packageDir);
+    assert.strictEqual(packages.isInstallable(packagesDir, name),
+            packages.ERR_ISFILE);
+    fs.remove(packageDir);
+    // link with same name exists
+    fs.symbolicLink(packagesDir, packageDir);
+    assert.isTrue(fs.isLink(packageDir));
+    assert.strictEqual(packages.isInstallable(packagesDir, name),
+            packages.ERR_ISLINK);
+    fs.removeDirectory(packageDir);
+    // directory exists, but does not contain a package
+    fs.makeDirectory(packageDir);
+    assert.strictEqual(packages.isInstallable(packagesDir, name),
+            packages.ERR_NOPACKAGE);
+    fs.removeDirectory(packageDir);
+    // directory contains a different package
+    packageDir = fs.join(packagesDir, name);
+    fs.makeTree(packageDir);
+    createDescriptor(packageDir, "differentpackage", "0.2");
+    assert.strictEqual(packages.isInstallable(packagesDir, name, "0.3"),
+            packages.ERR_RENAMED);
+    fs.removeTree(packageDir);
+    // directory contains a different package version
+    packageDir = createTestPackage(packagesDir, name, "0.2");
+    assert.strictEqual(packages.isInstallable(packagesDir, name, "0.3"),
+            packages.ERR_EXISTS);
+    fs.removeTree(packageDir);
+    // directory contains same package version
+    packageDir = createTestPackage(packagesDir, name, "0.2");
+    assert.strictEqual(packages.isInstallable(packagesDir, name, "0.2"),
+            packages.ERR_SAMEVERSION);
+    fs.removeTree(packageDir);
+};
+
+exports.testIsUpdateable = function() {
+    var name = "testpackage";
+    // package isn't installed
+    assert.strictEqual(packages.isUpdateable(packagesDir, name),
+            packages.OK);
+    // file with same name exists
+    var packageDir = fs.join(packagesDir, name);
+    fs.touch(packageDir);
+    assert.strictEqual(packages.isUpdateable(packagesDir, name),
+            packages.ERR_ISFILE);
+    fs.remove(packageDir);
+    // link with same name exists
+    fs.symbolicLink(packagesDir, packageDir);
+    assert.isTrue(fs.isLink(packageDir));
+    assert.strictEqual(packages.isUpdateable(packagesDir, name),
+            packages.ERR_ISLINK);
+    fs.removeDirectory(packageDir);
+    // directory exists, but does not contain a package
+    fs.makeDirectory(packageDir);
+    assert.strictEqual(packages.isUpdateable(packagesDir, name),
+            packages.ERR_NOPACKAGE);
+    fs.removeDirectory(packageDir);
+    // directory contains a different package
+    packageDir = fs.join(packagesDir, name);
+    fs.makeTree(packageDir);
+    createDescriptor(packageDir, "differentpackage", "0.2");
+    assert.strictEqual(packages.isUpdateable(packagesDir, name, "0.3"),
+            packages.ERR_RENAMED);
+    fs.removeTree(packageDir);
+    // package is up-to-date
+    packageDir = createTestPackage(packagesDir, name, "0.2");
+    assert.strictEqual(packages.isUpdateable(packagesDir, name, "0.2"),
+            packages.ERR_SAMEVERSION);
+    fs.removeTree(packageDir);
+    // package can be updated
+    packageDir = createTestPackage(packagesDir, name, "0.2");
+    assert.strictEqual(packages.isUpdateable(packagesDir, name, "0.3"),
+            packages.OK);
+    fs.removeTree(packageDir);
+};
+
+exports.testIsUninstallable = function() {
+    var name = "testpackage";
+    // package isn't installed
+    assert.strictEqual(packages.isUninstallable(packagesDir, name),
+            packages.ERR_GONE);
+    // file with same name exists
+    var packageDir = fs.join(packagesDir, name);
+    fs.touch(packageDir);
+    assert.strictEqual(packages.isUninstallable(packagesDir, name),
+            packages.ERR_ISFILE);
+    fs.remove(packageDir);
+    // link with same name exists
+    fs.symbolicLink(packagesDir, packageDir);
+    assert.isTrue(fs.isLink(packageDir));
+    assert.strictEqual(packages.isUninstallable(packagesDir, name),
+            packages.ERR_ISLINK);
+    fs.removeDirectory(packageDir);
+    // directory exists, but does not contain a package
+    fs.makeDirectory(packageDir);
+    assert.strictEqual(packages.isUninstallable(packagesDir, name),
+            packages.ERR_NOPACKAGE);
+    fs.removeDirectory(packageDir);
+    // directory contains a different package
+    packageDir = fs.join(packagesDir, name);
+    fs.makeTree(packageDir);
+    createDescriptor(packageDir, "differentpackage", "0.2");
+    assert.strictEqual(packages.isUninstallable(packagesDir, name, "0.3"),
+            packages.ERR_RENAMED);
+    fs.removeTree(packageDir);
+    // package can be uninstalled
+    packageDir = createTestPackage(packagesDir, name, "0.2");
+    assert.strictEqual(packages.isUninstallable(packagesDir, name),
+            packages.OK);
+    fs.removeTree(packageDir);
 };
 
 //start the test runner if we're called directly from command line
