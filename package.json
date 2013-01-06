@@ -1,6 +1,6 @@
 {
     "name": "rp",
-    "version": "0.4",
+    "version": "0.4.1",
     "description": "A package manager for RingoJS",
     "keywords": ["package manager", "ringojs", "modules"],
     "homepage": "https://github.com/grob/rp/",
@@ -9,7 +9,13 @@
         "email": "robert@nomatic.org",
         "web": "http://github.com/grob/"
     },
-    "contributors": [],
+    "contributors": [
+        {
+            "name": "Simon Oberhammer",
+            "web": "http://nekapuzer.at/",
+            "email": "simon@nekapuzer.at"
+        }
+    ],
     "repositories": [{
         "type": "git",
         "url": "https://github.com/grob/rp.git"
