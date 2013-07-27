@@ -7,7 +7,7 @@ exports.testCheckName = function() {
         descriptors.verifyName(null);
     });
     assert.throws(function() {
-        descriptors.verifyyName(undefined);
+        descriptors.verifyName(undefined);
     });
     assert.throws(function() {
         descriptors.verifyName("invalid?");
