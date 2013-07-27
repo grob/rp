@@ -33,10 +33,7 @@ var createDescriptor = function(packageDir, name, version) {
 exports.setUp = function() {
     fs.makeTree(packagesDir);
     fs.makeTree(binDir);
-    config.setConfig({
-        "ringoHome": testDir,
-        "repositoryUrl": "http://localhost:8123"
-    });
+    config.setRingoHome(testDir);
     assert.strictEqual(config.ringoHome, testDir);
 };
 
