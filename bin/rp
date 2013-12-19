@@ -9,27 +9,40 @@
 #
 # -----------------------------------------------------------------------------
 
-function find_ringo_home() {
+function find_home() {
+    # save original working directory
     ORIG_PWD="$(pwd -P)"
-    cd "$1/.."
+
+    # walk the links! we cd into the dir of the target binary, read the link,
+    # make this link our new target, and start over. we stop as soon as the
+    # target is no link anymore.
+    T="$1"
+    while true; do
+        cd "$(dirname "$T")"
+        T="$(basename "$T")"
+        if [ ! -L "$T" ]; then break; fi
+        T="$(readlink "$T")"
+    done
+
+    # the final target is in bin/, change to parent and echo as home
+    cd ..
     echo "$(pwd -P)"
+
     # restore original working directory
     cd "$ORIG_PWD"
 }
 
 DIR="$(dirname "$0")"
+RP_HOME="$(find_home "$0")"
+
 if [ -L $0 ] && [ -e "$DIR/ringo" ]; then
     # rp is linked into ringo's bin dir, use this one
     RINGO="$DIR/ringo"
-    export RINGO_HOME="$(find_ringo_home "$DIR")"
 else
     # check if ringo is in path
     RINGO=`type -P ringo`
-    if [ -z "$RINGO" ]; then
-        # ringo is not in path - check RINGO_HOME env variable
-        if [ -n "$RINGO_HOME" ]; then
-            RINGO="$RINGO_HOME/bin/ringo"
-        fi
+    if [ -z "$RINGO" ] && [ -n "$RINGO_HOME" ]; then
+        RINGO="$RINGO_HOME/bin/ringo"
     fi
 fi
 
@@ -39,4 +52,4 @@ if [ -z "$RINGO" ]; then
     exit 1
 fi
 
-"$RINGO" -J-client rp/lib/rp $@
+"$RINGO" --modules="$RP_HOME" -J-client rp/lib/rp $@
