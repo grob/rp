@@ -12,7 +12,7 @@ exports.testCheckName = function() {
     assert.throws(function() {
         descriptors.verifyName("invalid?");
     });
-    descriptors.verifyName("abc0123456789._- ");
+    descriptors.verifyName("abc0123456789._-");
 };
 
 exports.testCheckVersion = function() {
